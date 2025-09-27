@@ -18,6 +18,7 @@ export default function UserDashboard() {
   });
   const [history, setHistory] = useState([]);
   const [communityAvg, setCommunityAvg] = useState(76);
+  const [particleTypes, setParticleTypes] = useState([]);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -124,6 +125,12 @@ export default function UserDashboard() {
           if (!cancelled && analytics) {
             const sp = Number(analytics.safe_percentage ?? 76);
             if (!Number.isNaN(sp)) setCommunityAvg(sp);
+            // Build particle type dataset for chart (fiber, pellet, bead, unknown)
+            const pt = analytics.particle_type_counts || {};
+            const order = ['fiber', 'pellet', 'bead'];
+            const data = order.map(key => ({ type: key, count: Number(pt[key] || 0) }));
+            if (pt.unknown) data.push({ type: 'unknown', count: Number(pt.unknown || 0) });
+            setParticleTypes(data);
           }
         } catch (_) { /* ignore */ }
       } catch (_) {
@@ -478,17 +485,17 @@ export default function UserDashboard() {
             </div>
           </div>
 
-          {/* Recent trends (Bar chart) */}
+          {/* Particle Types (Bar chart) */}
           <div className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">Historical Trends (last 12 reports)</h2>
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">Particle Types</h2>
             <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={history} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+                <BarChart data={particleTypes} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                  <XAxis dataKey="idx" tickFormatter={(v) => `#${v}`} label={{ value: 'Report #', position: 'insideBottom', offset: -5 }} />
-                  <YAxis label={{ value: 'Micro count', angle: -90, position: 'insideLeft' }} />
+                  <XAxis dataKey="type" label={{ value: 'Type', position: 'insideBottom', offset: -5 }} />
+                  <YAxis allowDecimals={false} label={{ value: 'Count', angle: -90, position: 'insideLeft' }} />
                   <Tooltip />
-                  <Bar dataKey="micro" fill="#2563eb" radius={[6, 6, 0, 0]} name="Microplastics" />
+                  <Bar dataKey="count" fill="#2563eb" radius={[6, 6, 0, 0]} name="Count" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
