@@ -14,10 +14,13 @@ const User = sequelize.define(
   "User",
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    name: { type: DataTypes.STRING, allowNull: true },
     email: { type: DataTypes.STRING, allowNull: false, unique: true },
     password: { type: DataTypes.STRING, allowNull: false },
     role: { type: DataTypes.STRING, allowNull: false, defaultValue: "user" },
     isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+    resetToken: { type: DataTypes.STRING, allowNull: true },
+    resetExpires: { type: DataTypes.DATE, allowNull: true },
   },
   { tableName: "users" }
 );
@@ -36,7 +39,23 @@ const Result = sequelize.define(
   { tableName: "results" }
 );
 
+// Raw sensor data captured prior to ML inference/aggregation
+const SensorData = sequelize.define(
+  "SensorData",
+  {
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    type: { type: DataTypes.STRING, allowNull: true },
+    count: { type: DataTypes.INTEGER, allowNull: true },
+    payload: { type: DataTypes.JSON, allowNull: true },
+    timestamp: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+  },
+  { tableName: "sensor_data" }
+);
+
 User.hasMany(Result, { foreignKey: "userId" });
 Result.belongsTo(User, { foreignKey: "userId" });
+User.hasMany(SensorData, { foreignKey: "userId" });
+SensorData.belongsTo(User, { foreignKey: "userId" });
 
-module.exports = { sequelize, User, Result };
+module.exports = { sequelize, User, Result, SensorData };
+
